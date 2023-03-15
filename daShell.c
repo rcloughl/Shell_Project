@@ -15,7 +15,10 @@ int main(){
 
     while (1){
         printf("snails:~$ ");
-        fgets(input, MAX, stdin);
+        if (fgets(input, MAX, stdin)==NULL){
+            printf("\nGoodbye\n");
+            exit(0);
+        }
         input[strlen(input)-1]='\0';
         char *split;
         int tok=0;
@@ -39,25 +42,9 @@ int main(){
 
 
         if (strcmp(args[0][0],"exit")==0){
+            printf("\nGoodbye\n");
             exit(0);
         }
-
-        /*
-        int i=0;
-        int j=0;
-        while (args[i][0]!=NULL){
-            printf("start \n");
-            while (args[i][j]!=NULL){
-                printf("%s\n",args[i][j]);
-                j++;
-            }
-            printf("inc \n");
-            i++;
-            j=0;
-        }
-        printf("print\n");
-        */
-
         pid_t pid;
         int p[2];
         int input=0;
@@ -68,7 +55,7 @@ int main(){
             pipe(p);
             pid=fork();
             if (pid<0){
-                printf("failed fork");
+                printf("failed fork\n");
                 return 1;
             }
             else if (pid==0){
@@ -78,7 +65,7 @@ int main(){
                 }
                 close(p[0]);
                 execvp(args[cmdptr][0],args[cmdptr]);
-                printf("couldn't find command");
+                printf("couldn't find command\n");
                 return 1;
             }
             else{
@@ -87,31 +74,6 @@ int main(){
                 input=p[0];
             }
         }
-     /*   
-        for (int i=0; args[i]!=NULL; i++){
-            pipe(p);
-            pid = fork();
-            if (pid < 0) { 
-                printf("fork failed"); 
-                return 1; 
-            }
-            else if (pid == 0) {
-                dup2(input,0);
-                if (args[i+1] != NULL) {
-                    dup2(p[1], 1);
-                }
-                close(p[0]);   
-                execvp(args[0],args);
-                printf("couldn't find command %s\n",args[0]);
-                return 1;
-            }
-            else {
-                waitpid(pid,&status,0);
-                close(p[1]);
-                input=p[0];
-            }
-        }
-        */
     }
     return 0;
 }
