@@ -14,11 +14,17 @@ int main(){
     int status;
 
     while (1){
+	char pwd[MAX];
+	getcwd(pwd,sizeof(pwd));
+    //pwd
         printf("snails:~$ ");
         if (fgets(input, MAX, stdin)==NULL){
             printf("\nGoodbye\n");
             exit(0);
         }
+	if (strcmp(input,"\n")==0){
+		continue;
+	}
         input[strlen(input)-1]='\0';
         char *split;
         int tok=0;
@@ -52,6 +58,17 @@ int main(){
         while (args[cmdtrack][0]!=NULL){
             int cmdptr=cmdtrack;
             cmdtrack+=1;
+            if (strcmp(args[cmdptr][0],"cd")==0){
+                chdir(args[cmdptr][1]);
+                continue;
+            }
+/*
+            int tempcount=0;
+            split=strtok(args[cmdptr],"<");
+            if (split!=NULL){
+                
+            }
+*/
             pipe(p);
             pid=fork();
             if (pid<0){
