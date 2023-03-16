@@ -14,10 +14,10 @@ int main(){
     int status;
 
     while (1){
+    int bg[MAXIN];
 	char pwd[MAX];
 	getcwd(pwd,sizeof(pwd));
-    //pwd
-        printf("snails:~$ ");
+        printf("snails:~%s$ ", pwd);
         if (fgets(input, MAX, stdin)==NULL){
             printf("\nGoodbye\n");
             exit(0);
@@ -31,21 +31,27 @@ int main(){
         int cmdcounter=0;
         split=strtok(input," ");    // This function allows me to break the input up 
         while (split != NULL ){     // and seperate it on the ' ', found here https://linux.die.net/man/3/strtok
-            if (strcmp(split,"|")==0){
-                args[cmdcounter][tok]=NULL;
-                cmdcounter+=1;
-                tok=0;
-                split=strtok(NULL, " ");
+            if (strcmp(split,"&")==0){
+                bg[cmdcounter]=1;
+                split=strtok(NULL," ");
             }
             else {
-                args[cmdcounter][tok]=split;
-                split=strtok(NULL," ");
-                tok++;
+                bg[cmdcounter]=0;
+                if (strcmp(split,"|")==0){
+                    args[cmdcounter][tok]=NULL;
+                    cmdcounter+=1;
+                    tok=0;
+                    split=strtok(NULL, " ");
+                }
+                else {
+                    args[cmdcounter][tok]=split;
+                    split=strtok(NULL," ");
+                    tok++;
+                }
             }
         }     
         args[cmdcounter][tok]=NULL;
         args[cmdcounter+1][0]=NULL;
-
 
         if (strcmp(args[0][0],"exit")==0){
             printf("\nGoodbye\n");
@@ -86,9 +92,15 @@ int main(){
                 return 1;
             }
             else{
-                waitpid(pid,&status,0);
-                close(p[1]);
-                input=p[0];
+                if (bg[cmdptr]==1){
+                    close(p[1]);
+                    input=p[0];
+                }
+                else {
+                    waitpid(pid,&status,0);
+                    close(p[1]);
+                    input=p[0];
+                }
             }
         }
     }
