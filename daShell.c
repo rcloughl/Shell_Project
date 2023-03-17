@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <fcntl.h>
+#include <signal.h>
 
 #define MAX 1024
 #define MAXIN 24
@@ -15,6 +17,7 @@ int main(){
 
     while (1){
     int bg[MAXIN];
+    int arr[]={0,0,0,0,0,0};
 	char pwd[MAX];
 	getcwd(pwd,sizeof(pwd));
         printf("snails:~%s$ ", pwd);
@@ -34,13 +37,19 @@ int main(){
             if (strcmp(split,"&")==0){
                 bg[cmdcounter]=1;
                 split=strtok(NULL," ");
-            }
-            else {
-                bg[cmdcounter]=0;
+            } else if (strcmp(split,"<")==0){
+                split=strtok(NULL," ");
+            } else if (0==strcmp(split,">")){
+                arr[cmdcounter]=1;
+                args[cmdcounter][tok]=split;
+                split=strtok(NULL," ");
+                tok+=1;
+            } else {
                 if (strcmp(split,"|")==0){
                     args[cmdcounter][tok]=NULL;
                     cmdcounter+=1;
                     tok=0;
+                    arr[cmdcounter]=0;
                     split=strtok(NULL, " ");
                 }
                 else {
@@ -68,13 +77,6 @@ int main(){
                 chdir(args[cmdptr][1]);
                 continue;
             }
-/*
-            int tempcount=0;
-            split=strtok(args[cmdptr],"<");
-            if (split!=NULL){
-                
-            }
-*/
             pipe(p);
             pid=fork();
             if (pid<0){
@@ -82,6 +84,38 @@ int main(){
                 return 1;
             }
             else if (pid==0){
+                if (arr[cmdptr]==1){
+                    int i=0; 
+                    char *cmd[MAXIN];
+                    char *fn[MAXIN];
+                    
+                    while (strcmp(args[cmdptr][i],">")!=0){
+                        cmd[i]=args[cmdptr][i];
+                        i+=1;
+                    }
+                    i+=1;
+                    int j=0;
+                    while (args[cmdptr][i]!=NULL){
+                        fn[j]=args[cmdptr][i];
+                        i+=1;
+                        j+=1;
+                    }
+                    if (fork()==0){
+                        close(1);
+                        int of=open(fn[0],O_CREAT|O_WRONLY, 0644);
+                        dup2(of,1);
+                        execvp(cmd[0],cmd);
+                        printf("couldn't find command\n");
+                        return 1;
+                    }
+                    else{
+                        waitpid(pid,&status,0);
+                    }
+
+
+
+                    return 1;
+                }
                 dup2(input,0);
                 if (args[cmdptr+1][0]!=NULL){
                     dup2(p[1],1);
@@ -100,6 +134,7 @@ int main(){
                     waitpid(pid,&status,0);
                     close(p[1]);
                     input=p[0];
+                    printf("\n");
                 }
             }
         }
